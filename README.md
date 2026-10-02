@@ -34,10 +34,11 @@ Authors
 Camilo Prieto Valderrama
 Diego Patiño
 
-License
+Version
 -------
-Choose an open-source license for the GitHub repository (e.g., MIT or BSD-3-Clause)
-before archiving the release in Zenodo.
+Reviewer-1 harmonization revision candidate (450-kg UGG reference-animal basis).
+This version changes numerical results compared with v1.0.0 and requires a NEW
+archived Zenodo software version/DOI; do not overwrite the old release.
 """
 
 from __future__ import annotations
@@ -63,9 +64,17 @@ DEFAULT_SEED = 42
 GWP_CH4 = 27.0
 GWP_N2O = 273.0
 
-# Representative live mass used only to harmonize VS and N-excretion
-# factors reported per 1,000 kg live mass.
-MASS_EQ_KG = 300.0
+# Livestock-unit harmonization (Reviewer 1, round 2):
+# A Colombian UGG is 450 kg live mass.  The model represents one
+# 450-kg *reference animal* per modeled UGG.  Thus SR is UGG/ha
+# numerically equal to reference animals/ha under the explicit
+# 450-kg/head simplifying assumption, NOT a field census of heads/ha.
+# ADG and IPCC other-cattle enteric EF are assigned per reference animal.
+# VS and N rates, reported per 1,000 kg of live animal mass, use 450 kg.
+# Population mix and time-varying mean live weights are not resolved;
+# this limitation is explicitly reported in manuscript and supplement.
+UGG_KG_LIVE_MASS = 450.0
+MASS_EQ_KG = UGG_KG_LIVE_MASS
 
 # Manure deposited on pasture/range/paddock.
 EF_MANURE_CH4 = 0.0006  # kg CH4 per kg VS
@@ -93,9 +102,9 @@ T_CARBON_CREDIT = 20  # yr
 
 SCENARIOS = {
     "BAU-F": {
-        "SR": (0.50, 0.85, 1.00),                 # animal-equivalent ha-1
-        "ADG": (0.25, 0.37, 0.50),                # kg LWG animal-equivalent-1 d-1
-        "EFent_mode": 58.0,                        # kg CH4 animal-equivalent-1 yr-1
+        "SR": (0.50, 0.85, 1.00),                 # 450-kg UGG ha-1
+        "ADG": (0.25, 0.37, 0.50),                # kg LWG reference-animal-1 d-1
+        "EFent_mode": 58.0,                        # kg CH4 reference-animal-1 yr-1
         "VS_rate_mode": 8.60,                      # kg VS (1000 kg LW)-1 d-1
         "Nex_rate_mode": 0.290,                    # kg N (1000 kg LW)-1 d-1
         "inputs": (50.0, 100.0, 200.0),            # kg CO2eq ha-1 yr-1
@@ -174,7 +183,10 @@ def sample_sr_adg_with_envelope(
     Jointly sample stocking rate and ADG and reject combinations whose derived
     productivity lies outside the evidence-supported scenario envelope.
 
-    This is the explicit plausibility constraint used in the manuscript.
+    This is the explicit plausibility constraint used in the revised manuscript.
+    SR is 450-kg UGG/ha; ADG denotes kg gain/(450-kg reference animal)/day.
+    This simplification is NOT a census of actual heads; for animals of mean
+    mass W kg, head count per ha would instead equal UGG/ha x (450/W).
     """
     sr_parts: list[np.ndarray] = []
     adg_parts: list[np.ndarray] = []
@@ -959,9 +971,9 @@ def make_figures(
 # ---------------------------------------------------------------------
 
 EXPECTED_PRIMARY_MEANS = {
-    "BAU-F": 13.5136140922557,
-    "SSPi-M": 8.243247654203213,
-    "SSPi-I": 6.8693882857864486,
+    "BAU-F": 13.879362400397280,
+    "SSPi-M": 8.488935878380618,
+    "SSPi-I": 7.103372545183964,
 }
 
 
@@ -1033,7 +1045,7 @@ def export_all(
             outdir=outdir / "figures",
         )
 
-    # Exact manuscript verification applies only to the archived default run.
+    # Exact revised-manuscript verification applies to the stated 450-kg basis.
     if n == DEFAULT_N and seed == DEFAULT_SEED:
         verify_manuscript_outputs(results)
 
